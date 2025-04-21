@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Event</title>
+    <style>
+        body { font-family: sans-serif; padding: 2em; }
+        form { max-width: 400px; margin: auto; }
+        input, textarea { width: 100%; padding: 0.5em; margin: 0.5em 0; }
+        button { padding: 0.7em 1.5em; }
+    </style>
+</head>
+<body>
+    <h2>Add a New Event</h2>
+    <form method="POST">
+        <label for="date">Date (YYYY-MM-DD):</label>
+        <input type="date" id="date" name="date" required>
+
+        <label for="time">Time (HH:MM):</label>
+        <input type="time" id="time" name="time" required>
+
+        <label for="description">Event Description:</label>
+        <textarea id="description" name="description" rows="3" required></textarea>
+
+        <button type="submit">Add Event</button>
+    </form>
+    <p><a href="/">← Back to Calendar</a></p>
+</body>
+</html>

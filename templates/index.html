@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Eventz Calendar</title>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+<style>
+    .obsolete {
+        color: gray !important;
+        text-decoration: line-through;
+        font-style: italic;
+    }
+    .active {
+        color: black;
+    }
+</style>
+
+<
+</head>
+<body>
+    <h2>📅 Eventz Calendar – FullCalendar View</h2>
+    <label>
+        <input type="checkbox" id="toggle-current" checked>
+        Show only current (latest) events
+    </label>
+
+    <div id="calendar"></div>
+    <p><a href="/add">➕ Add New Event</a></p>
+
+
+<script>
+    let allEvents = []; // Full dataset from /events
+    let calendar = null;
+
+    async function loadEventsAndRenderCalendar() {
+        const res = await fetch("/events");
+        allEvents = await res.json();
+        renderCalendar(); // initial render
+    }
+
+    function renderCalendar() {
+        const calendarEl = document.getElementById("calendar");
+
+        // Destroy any existing calendar
+        if (calendar !== null) {
+            calendar.destroy();
+        }
+
+        const showOnlyCurrent = document.getElementById("toggle-current").checked;
+
+        const filteredEvents = showOnlyCurrent
+            ? allEvents.filter(ev => ev.className === "active")
+            : allEvents;
+
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            editable: true,
+            events: filteredEvents,
+
+            eventClick: function(info) {
+                const title = info.event.title;
+                const date = info.event.extendedProps.date;
+                const time = info.event.extendedProps.time;
+                const recorded = info.event.extendedProps.recorded_at;
+                alert(`📌 ${title}\n🗓️ ${date} at ${time}\n🕒 Logged: ${recorded}`);
+            },
+
+            eventDrop: function(info) {
+                fetch("/reschedule", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        old_start: info.oldEvent.startStr,
+                        new_start: info.event.startStr,
+                        title: info.event.title
+                    })
+                }).then(() => {
+                    alert("📌 Event rescheduled!");
+                    loadEventsAndRenderCalendar(); // Refresh data & redraw
+                }).catch(() => {
+                    alert("❌ Failed to reschedule event.");
+                });
+            },
+
+            eventMouseEnter: function(info) {
+                const tooltip = info.event.extendedProps.tooltip;
+                if (tooltip) {
+                    info.el.setAttribute("title", tooltip);
+                }
+            }
+        });
+
+        calendar.render();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("toggle-current").addEventListener("change", renderCalendar);
+        loadEventsAndRenderCalendar();
+    });
+</script>
+
+
+</body>
+</html>
+
+
